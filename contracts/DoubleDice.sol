@@ -7,7 +7,7 @@ contract DoubleDice {
     uint public jackpot;
 
     uint public tokenId = 1002398;
-    uint public jackpotRange = 100000;
+    uint public jackpotRange = 1000;
     
     event Dice(address indexed from, uint256 bet, uint256 prize, uint256 number, uint256 rollUnder, bool playForJackpot, uint256 jackpot);
     
@@ -45,12 +45,18 @@ contract DoubleDice {
     }
 
     function getProfit() external onlyOwner {
-        owner.transfer((address(this).balance - jackpot) / 2);
+        owner.transfer(address(this).balance - jackpot);
+    }
+
+    function closeContract() external onlyOwner {
+        owner.transfer(address(this).balance);
     }
     
     function dice(uint rollUnder) external payable notContract {
-        require(msg.value <= getMaxBet());
+        require(msg.value >= 5000000 && msg.value <= getMaxBet());
         require(rollUnder >= 2 && rollUnder <= 97);
+
+        msg.sender.transferToken(1000000, tokenId);
         
         bool playForJackpot = msg.sender.tokenBalance(tokenId) >= 10000000000;
         uint number = random(100);
@@ -63,7 +69,7 @@ contract DoubleDice {
             msg.sender.transfer(prize + winJackpot);
             emit Dice(msg.sender, msg.value, prize, number, rollUnder, playForJackpot, winJackpot);
         } else {
-            jackpot += msg.value / 100;
+            jackpot += msg.value / 10;
             emit Dice(msg.sender, msg.value, 0, number, rollUnder, playForJackpot, 0);
         }
     }
